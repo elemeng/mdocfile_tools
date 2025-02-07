@@ -1,5 +1,6 @@
 import re
 import argparse
+import os
 from typing import Dict, Any
 
 
@@ -102,6 +103,22 @@ def update_dose_rate(file_path: str, new_dose_rate: float):
                     file.write(f"[{section_type} = {section_name}]\n")
                     for key, value in data.items():
                         file.write(f"{key} = {value}\n")
+    print(
+        f"Updated DoseRate to {new_dose_rate} and Changed ExposureDose, FrameDosesAndNumber and PriorRecordDose accordingly in {file_path}"
+    )
+
+
+def batch_update_dose_rate(directory: str, new_dose_rate: float):
+    """
+    Batch update the DoseRate for all .mdoc files in a given directory.
+
+    :param directory: Path to the directory containing .mdoc files
+    :param new_dose_rate: New DoseRate value
+    """
+    for filename in os.listdir(directory):
+        if filename.endswith(".mdoc"):
+            file_path = os.path.join(directory, filename)
+            update_dose_rate(file_path, new_dose_rate)
 
 
 if __name__ == "__main__":
@@ -119,6 +136,18 @@ if __name__ == "__main__":
     update_parser.add_argument("file_path", type=str, help="Path to the .mdoc file")
     update_parser.add_argument("new_dose_rate", type=float, help="New DoseRate value")
 
+    # Subparser for the batch update command
+    batch_update_parser = subparsers.add_parser(
+        "batch_update",
+        help="Batch update the DoseRate in all .mdoc files in a directory",
+    )
+    batch_update_parser.add_argument(
+        "directory", type=str, help="Path to the directory containing .mdoc files"
+    )
+    batch_update_parser.add_argument(
+        "new_dose_rate", type=float, help="New DoseRate value"
+    )
+
     args = parser.parse_args()
 
     if args.command == "parse":
@@ -127,3 +156,8 @@ if __name__ == "__main__":
     elif args.command == "update":
         update_dose_rate(args.file_path, args.new_dose_rate)
         print(f"DoseRate updated to {args.new_dose_rate} in {args.file_path}")
+    elif args.command == "batch_update":
+        batch_update_dose_rate(args.directory, args.new_dose_rate)
+        print(
+            f"Batch updated DoseRate to {args.new_dose_rate} in all .mdoc files in {args.directory}"
+        )
